@@ -8,11 +8,11 @@
   status = 200
 
 [[redirects]]
-  from = "/api/data"
-  to = "/.netlify/functions/data"
+  from = "/api/data/*"
+  to = "/.netlify/functions/data/:splat"
   status = 200
 
 [[redirects]]
-  from = "/api/data/*"
+  from = "/api/data"
   to = "/.netlify/functions/data"
   status = 200
