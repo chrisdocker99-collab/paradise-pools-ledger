@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Investment Tracker</title>
+<style>
+:root{--bg:#0f1117;--bg2:#161b22;--bg3:#1c2230;--border:#30363d;--border2:#444c56;--text:#e6edf3;--text2:#8b949e;--text3:#6e7681;--blue:#1f6feb;--blue2:#388bfd;--blue3:#58a6ff;--green2:#3fb950;--green3:#7ee787;--red:#da3633;--red3:#ff7b72;--amber:#9e6a03;--amber3:#e3b341;--purple3:#d2a8ff;--radius:8px;--radius-lg:12px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+.app-shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sidebar-logo{padding:16px;border-bottom:1px solid var(--border)}
+.sidebar-logo .brand{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.sidebar-logo .sub{font-size:0.72rem;color:var(--text2);margin-top:2px}
+.sidebar-nav{flex:1;padding:8px 0;overflow-y:auto}
+.nav-section{padding:4px 12px 2px;font-size:0.68rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:0.875rem;color:var(--text2);cursor:pointer;transition:all 0.1s;position:relative}
+.nav-item:hover,.nav-item.active{background:var(--bg3);color:var(--text)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--blue3);border-radius:0 2px 2px 0}
+.main{margin-left:220px;flex:1;padding:24px;max-width:1200px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px}
+.topbar-title{font-size:1.25rem;font-weight:700}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+.card-sm{padding:14px 16px}
+.card-title{font-size:0.8rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.metric-val{font-size:1.75rem;font-weight:700;line-height:1.2}
+.metric-sub{font-size:0.8rem;color:var(--text2);margin-top:4px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg3);color:var(--text2);font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:0.875rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.td-num{text-align:right;font-variant-numeric:tabular-nums}
+.td-ticker{font-weight:700;font-family:monospace;font-size:0.85rem}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:600}
+.badge-au_share{background:rgba(31,111,235,.15);color:var(--blue3)}
+.badge-intl_share{background:rgba(110,64,201,.15);color:var(--purple3)}
+.badge-crypto{background:rgba(227,179,65,.15);color:var(--amber3)}
+.badge-property{background:rgba(46,160,67,.15);color:var(--green3)}
+.badge-cash{background:rgba(139,148,158,.15);color:var(--text2)}
+.badge-other{background:rgba(139,148,158,.12);color:var(--text3)}
+.badge-smsf{background:rgba(142,68,173,.15);color:var(--purple3);border:1px solid rgba(142,68,173,.3)}
+.badge-personal{background:rgba(31,111,235,.1);color:var(--blue3)}
+.pos{color:var(--green3)}.neg{color:var(--red3)}.neu{color:var(--text2)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);font-size:0.85rem;font-weight:500;transition:all .15s;cursor:pointer;border:none;font-family:inherit}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue2)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-danger{background:rgba(218,54,51,.15);color:var(--red3);border:1px solid rgba(218,54,51,.3)}.btn-danger:hover{background:rgba(218,54,51,.25)}
+.btn-sm{padding:5px 10px;font-size:0.78rem}.btn-icon{padding:6px;border-radius:6px;color:var(--text2)}.btn-icon:hover{background:var(--bg3);color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.form-row-1{grid-template-columns:1fr}
+label{display:block;font-size:0.78rem;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em}
+input,select,textarea{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.875rem;font-family:inherit;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--blue2)}
+textarea{resize:vertical;min-height:60px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;display:flex;align-items:center;justify-content:center}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.05rem;font-weight:700;margin-bottom:20px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.toast{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-size:0.875rem;min-width:260px;animation:slideIn .2s ease}
+.toast-ok{border-color:var(--green2)}.toast-err{border-color:var(--red3)}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+.view{display:none}.view.active{display:block}
+.alloc-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:8px 0}
+.alloc-seg{height:100%;transition:width .3s}
+.chart-placeholder{background:var(--bg3);border-radius:var(--radius);padding:40px;text-align:center;color:var(--text3);font-size:0.85rem;border:1px dashed var(--border2)}
+.progress-track{background:var(--bg3);border-radius:4px;height:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--blue3));transition:width .4s}
+.progress-fill.warn{background:linear-gradient(90deg,var(--amber),var(--amber3))}
+.progress-fill.over{background:linear-gradient(90deg,var(--red),var(--red3))}
+.smsf-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem}
+.info-row:last-child{border:none}
+.info-label{color:var(--text2)}.info-val{font-weight:600}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--blue3);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.last-updated{font-size:0.72rem;color:var(--text3)}
+.section-gap{margin-top:20px}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.flex-gap{display:flex;gap:8px;align-items:center}
+.empty-state{text-align:center;padding:48px 24px;color:var(--text3)}
+.empty-state .empty-icon{font-size:2.5rem;margin-bottom:12px}
+</style>
+</head><body>
+<div class="app-shell">
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Ledger</div>
+    <div class="sub">Investment Tracker</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="nav-item" data-view="portfolio" onclick="showView('portfolio')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Portfolio</div>
+    <div class="nav-item" data-view="networth" onclick="showView('networth')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Net Worth</div>
+    <div class="nav-section">Accounts</div>
+    <div class="nav-item" data-view="personal" onclick="showView('personal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Personal</div>
+    <div class="nav-item" data-view="smsf" onclick="showView('smsf')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>SMSF</div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" data-view="watchlist" onclick="showView('watchlist')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Watchlist</div>
+    <div class="nav-item" data-view="settings" onclick="showView('settings')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+  </div>
+</nav>
+<main class="main">
+<div id="view-dashboard" class="view active">
+  <div class="topbar"><div class="topbar-title">Dashboard</div><div class="topbar-actions"><span class="last-updated" id="last-updated-label">Loading...</span><button class="btn btn-ghost btn-sm" onclick="refreshPrices()"><span id="refresh-spinner" style="display:none" class="spin"></span>&#8635; Refresh</button><button class="btn btn-primary btn-sm" onclick="openAddHolding()">+ Add Holding</button></div></div>
+  <div class="stat-grid"><div class="card card-sm"><div class="card-title">Total Portfolio</div><div class="metric-val" id="stat-total">—</div><div class="metric-sub" id="stat-total-sub">—</div></div><div class="card card-sm"><div class="card-title">Unrealised P/L</div><div class="metric-val" id="stat-pnl">—</div><div class="metric-sub" id="stat-pnl-pct">—</div></div><div class="card card-sm"><div class="card-title">Personal</div><div class="metric-val" id="stat-personal">—</div><div class="metric-sub" id="stat-personal-sub">account</div></div><div class="card card-sm"><div class="card-title">SMSF</div><div class="metric-val" id="stat-smsf">—</div><div class="metric-sub">A Dogs Life Super Fund</div></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;"><div class="card"><div class="flex-between" style="margin-bottom:12px"><div class="card-title" style="margin:0">Asset Allocation</div></div><div class="alloc-bar" id="alloc-bar"></div><div id="alloc-legend" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;"></div></div><div class="card"><div class="card-title">Top Holdings</div><div id="top-holdings-list"></div></div></div>
+  <div class="card"><div class="flex-between" style="margin-bottom:12px"><div class="card-title" style="margin:0">All Holdings</div></div><div class="tbl-wrap"><table><thead><tr><th>Asset</th><th>Type</th><th>Account</th><th class="td-num">Units</th><th class="td-num">Price</th><th class="td-num">Value (AUD)</th><th class="td-num">Cost</th><th class="td-num">P/L</th><th class="td-num">P/L %</th><th>24h</th><th></th></tr></thead><tbody id="holdings-tbody"></tbody></table></div></div>
+</div>
+<div id="view-portfolio" class="view"><div class="topbar"><div class="topbar-title">Portfolio</div><div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="openAddHolding()">+ Add Holding</button></div></div><div id="portfolio-content"></div></div>
+<div id="view-networth" class="view"><div class="topbar"><div class="topbar-title">Net Worth</div></div><div class="stat-grid" id="nw-stats"></div><div class="card" style="margin-bottom:16px"><div class="card-title">Breakdown</div><div id="nw-breakdown"></div></div><div class="card"><div class="card-title">History</div><div class="chart-placeholder">Snapshot net worth daily to track over time.</div></div></div>
+<div id="view-personal" class="view"><div class="topbar"><div class="topbar-title">Personal Account</div><div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="openAddHolding('personal')">+ Add Holding</button></div></div><div id="personal-content"></div></div>
+<div id="view-smsf" class="view"><div class="topbar"><div class="topbar-title">SMSF — A Dogs Life Super Fund</div><div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="openAddHolding('smsf')">+ Add Holding</button></div></div><div id="smsf-content"></div></div>
+<div id="view-watchlist" class="view"><div class="topbar"><div class="topbar-title">Watchlist</div><div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="openAddWatch()">+ Watch Ticker</button></div></div><div id="watchlist-content"></div></div>
+<div id="view-settings" class="view"><div class="topbar"><div class="topbar-title">Settings</div></div><div id="settings-content"></div></div>
+</main></div>
+<div class="modal-overlay hidden" id="modal-holding">
+  <div class="modal"><div class="modal-title" id="modal-holding-title">Add Holding</div>
+  <div class="form-row"><div><label>Ticker / ID</label><input id="h-ticker" placeholder="e.g. VAS.AU, AAPL.US, bitcoin" oninput="onTickerChange()"></div><div><label>Name</label><input id="h-name" placeholder="e.g. Vanguard Australian Shares ETF"></div></div>
+  <div class="form-row"><div><label>Asset Type</label><select id="h-type" onchange="onTypeChange()"><option value="au_share">AU Share / ETF</option><option value="intl_share">International Share</option><option value="crypto">Crypto</option><option value="property">Property</option><option value="cash">Cash</option><option value="other">Other</option></select></div><div><label>Account</label><select id="h-account"><option value="personal">Personal</option><option value="smsf">SMSF</option></select></div></div>
+  <div class="form-row"><div><label>Units</label><input id="h-units" type="number" min="0" step="0.00000001"></div><div><label>Total Cost (AUD)</label><input id="h-cost" type="number" min="0" step="0.01"></div></div>
+  <div id="h-fx-row" class="form-row" style="display:none"><div><label>USD Cost/Unit</label><input id="h-usd-cost" type="number" oninput="calcAudCost()"></div><div><label>FX Rate (USD→AUD)</label><input id="h-fx" type="number" step="0.0001" placeholder="1.55" oninput="calcAudCost()"></div></div>
+  <div id="h-cg-row" class="form-row form-row-1" style="display:none"><div><label>CoinGecko ID</label><input id="h-cg-id" placeholder="e.g. bitcoin, ethereum"></div></div>
+  <div class="form-row form-row-1"><div><label>Notes (optional)</label><textarea id="h-notes"></textarea></div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-holding')">Cancel</button><button class="btn btn-primary" onclick="saveHolding()">Save</button></div></div>
+</div>
+<div class="modal-overlay hidden" id="modal-watch">
+  <div class="modal"><div class="modal-title">Watch Ticker</div>
+  <div class="form-row"><div><label>Ticker</label><input id="w-ticker"></div><div><label>Name</label><input id="w-name"></div></div>
+  <div class="form-row"><div><label>Type</label><select id="w-type"><option value="au_share">AU Share/ETF</option><option value="intl_share">Intl Share</option><option value="crypto">Crypto</option><option value="other">Other</option></select></div><div><label>CoinGecko ID (crypto)</label><input id="w-cg-id"></div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-watch')">Cancel</button><button class="btn btn-primary" onclick="saveWatchItem()">Add</button></div></div>
+</div>
+<div class="toast" id="toast-container"></div><script>
+let holdings=[],watchlist=[],smsfSettings={},prefs={},liveQuotes={},liveCrypto={},liveFx={},currentView='dashboard',editingHoldingId=null,_simMode=false;
+const fmtAUD=n=>n==null?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+const fmtAUDfull=n=>n==null?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const fmtPct=(n,dp=2)=>n==null?'—':(n>=0?'+':'')+n.toFixed(dp)+'%';
+const fmtNum=(n,dp=4)=>n==null?'—':(+n).toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:dp});
+const plClass=n=>n>0?'pos':n<0?'neg':'neu';
+function toast(msg,ok=true){const el=document.createElement('div');el.className='toast-item '+(ok?'toast-ok':'toast-err');el.textContent=msg;document.getElementById('toast-container').appendChild(el);setTimeout(()=>el.remove(),3500);}
+function showView(name){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const v=document.getElementById('view-'+name);if(v)v.classList.add('active');const ni=document.querySelector('[data-view="'+name+'"]');if(ni)ni.classList.add('active');currentView=name;renderCurrentView();}
+function openModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+const API='/api/data';
+async function apiGet(r){try{const res=await fetch(API+'/'+r);if(!res.ok)throw new Error('HTTP '+res.status);return res.json();}catch(e){return null;}}
+async function apiPost(r,b){const res=await fetch(API+'/'+r,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});if(!res.ok){const t=await res.text();throw new Error(t);}return res.json();}
+async function apiPatch(r,id,b){const res=await fetch(API+'/'+r+'/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});if(!res.ok){const t=await res.text();throw new Error(t);}return res.json();}
+async function apiDelete(r,id){const res=await fetch(API+'/'+r+'/'+id,{method:'DELETE'});if(!res.ok)throw new Error('HTTP '+res.status);}
+async function refreshPrices(){
+  const sp=document.getElementById('refresh-spinner');if(sp)sp.style.display='';
+  try{
+    const eq=[...new Set([...holdings,...watchlist].filter(h=>h.asset_type==='au_share'||h.asset_type==='intl_share').map(h=>h.ticker))];
+    const cr=[...new Set([...holdings,...watchlist].filter(h=>h.asset_type==='crypto'&&h.cg_id).map(h=>h.cg_id))];
+    const p=new URLSearchParams();if(eq.length)p.set('tickers',eq.join(','));if(cr.length)p.set('crypto',cr.join(','));
+    const r=await fetch('/api/quotes?'+p.toString());
+    if(r.ok){const d=await r.json();liveQuotes=d.quotes||{};liveCrypto=d.crypto||{};liveFx=d.fx||{};_simMode=false;const l=document.getElementById('last-updated-label');if(l)l.textContent='Updated '+new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});}
+    else throw new Error('Quote fetch failed');
+  }catch(e){_simMode=true;simulatePrices();const l=document.getElementById('last-updated-label');if(l)l.textContent='Simulated prices';}
+  if(sp)sp.style.display='none';
+  renderCurrentView();renderDashboard();
+}
+function simulatePrices(){
+  const seed={'VAS.AU':{price:98.50,change_pct:0.42},'VGS.AU':{price:142.20,change_pct:1.15},'AAPL.US':{price:189.50,change_pct:-0.33},'BHP.AU':{price:44.20,change_pct:-0.55},'CBA.AU':{price:158.30,change_pct:0.22}};
+  holdings.forEach(h=>{if((h.asset_type==='au_share'||h.asset_type==='intl_share')&&!liveQuotes[h.ticker])liveQuotes[h.ticker]=seed[h.ticker]||{price:h.cost_aud/Math.max(h.units,1),change_pct:0};if(h.asset_type==='crypto'&&h.cg_id&&!liveCrypto[h.cg_id]){const cs={bitcoin:{price_aud:95000,change_24h:2.1},ethereum:{price_aud:4800,change_24h:1.5},solana:{price_aud:240,change_24h:3.2}};liveCrypto[h.cg_id]=cs[h.cg_id]||{price_aud:h.cost_aud/Math.max(h.units,1),change_24h:0};}});
+  if(!liveFx.USDAUD)liveFx.USDAUD=1.54;
+}
+function getPrice(h){if(h.asset_type==='au_share')return liveQuotes[h.ticker]?.price??null;if(h.asset_type==='intl_share'){const p=liveQuotes[h.ticker]?.price??null;const fx=liveFx.USDAUD||h.last_fx||1.54;return p!=null?p*fx:null;}if(h.asset_type==='crypto')return h.cg_id?(liveCrypto[h.cg_id]?.price_aud??null):null;return h.last_price??null;}
+function getChange(h){if(h.asset_type==='au_share'||h.asset_type==='intl_share')return liveQuotes[h.ticker]?.change_pct??null;if(h.asset_type==='crypto'&&h.cg_id)return liveCrypto[h.cg_id]?.change_24h??null;return null;}
+function getValue(h){const p=getPrice(h);return p!=null?p*h.units:h.cost_aud;}
+function getPL(h){return getValue(h)-h.cost_aud;}
+function getPLPct(h){if(!h.cost_aud||h.cost_aud===0)return 0;return getPL(h)/h.cost_aud*100;}
+function value(){const ph=holdings.filter(h=>h.account==='personal'),sh=holdings.filter(h=>h.account==='smsf');const tp=ph.reduce((s,h)=>s+getValue(h),0),ts=sh.reduce((s,h)=>s+getValue(h),0),tc=holdings.reduce((s,h)=>s+h.cost_aud,0),tv=tp+ts;return{personal:tp,smsf:ts,net:tv,cost:tc,pnl:tv-tc,pnlPct:tc>0?(tv-tc)/tc*100:0};}
+function allocation(){return['au_share','intl_share','crypto','property','cash','other'].map(t=>{const v=holdings.filter(h=>h.asset_type===t).reduce((s,h)=>s+getValue(h),0);const tot=holdings.reduce((s,h)=>s+getValue(h),0);return{type:t,val:v,pct:tot>0?v/tot*100:0};}).filter(a=>a.val>0);}
+const TC={'au_share':'#1f6feb','intl_share':'#8957e5','crypto':'#e3b341','property':'#3fb950','cash':'#8b949e','other':'#6e7681'};
+const TL={'au_share':'AU Shares','intl_share':'Intl Shares','crypto':'Crypto','property':'Property','cash':'Cash','other':'Other'};
+function typeBadge(t){return '<span class="badge badge-'+t+'">'+TL[t]+'</span>';}
+function accountBadge(a){return '<span class="badge badge-'+a+'">'+a+'</span>';}
+function renderHoldingsTable(data,tbodyId){const tb=document.getElementById(tbodyId);if(!tb)return;if(!data.length){tb.innerHTML='<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">&#x1F4CA;</div><p>No holdings yet. Add your first holding.</p></div></td></tr>';return;}tb.innerHTML=data.map(h=>{const val=getValue(h),pl=getPL(h),pp=getPLPct(h),pr=getPrice(h),ch=getChange(h);return'<tr><td><div class="td-ticker">'+h.ticker+'</div><div style="font-size:0.75rem;color:var(--text2)">'+h.name+'</div></td><td>'+typeBadge(h.asset_type)+'</td><td>'+accountBadge(h.account)+'</td><td class="td-num">'+fmtNum(h.units,4)+'</td><td class="td-num">'+(pr!=null?fmtAUDfull(pr):'—')+'</td><td class="td-num">'+fmtAUD(val)+'</td><td class="td-num" style="color:var(--text2)">'+fmtAUD(h.cost_aud)+'</td><td class="td-num '+plClass(pl)+'">'+fmtAUD(pl)+'</td><td class="td-num '+plClass(pp)+'">'+fmtPct(pp)+'</td><td class="td-num '+(ch!=null?plClass(ch):'')+'">'+( ch!=null?fmtPct(ch):'—')+'</td><td><div class="flex-gap"><button class="btn btn-icon btn-sm" onclick="editHolding(\''+h.id+'\')">&#x270F;&#xFE0F;</button><button class="btn btn-icon btn-sm" onclick="deleteHolding(\''+h.id+'\')">&#x1F5D1;&#xFE0F;</button></div></td></tr>';}).join('');}
+function renderDashboard(){const v=value(),al=allocation();document.getElementById('stat-total').textContent=fmtAUD(v.net);document.getElementById('stat-total-sub').textContent=fmtAUD(v.cost)+' cost base';const pe=document.getElementById('stat-pnl');pe.className='metric-val '+plClass(v.pnl);pe.textContent=fmtAUD(v.pnl);document.getElementById('stat-pnl-pct').textContent=fmtPct(v.pnlPct)+' total return';document.getElementById('stat-personal').textContent=fmtAUD(v.personal);document.getElementById('stat-smsf').textContent=fmtAUD(v.smsf);const bar=document.getElementById('alloc-bar');if(bar){bar.innerHTML=al.map(a=>'<div class="alloc-seg" style="width:'+a.pct.toFixed(1)+'%;background:'+(TC[a.type]||'#555')+'"></div>').join('');document.getElementById('alloc-legend').innerHTML=al.map(a=>'<div class="flex-gap" style="font-size:0.75rem;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:'+TC[a.type]+';display:inline-block"></span>'+TL[a.type]+' '+a.pct.toFixed(0)+'%</div>').join('');}const top=[...holdings].sort((a,b)=>getValue(b)-getValue(a)).slice(0,5);const te=document.getElementById('top-holdings-list');if(te){if(!top.length){te.innerHTML='<div style="color:var(--text3);font-size:0.85rem">No holdings yet</div>';}else{const mv=getValue(top[0])||1;te.innerHTML=top.map(h=>{const val=getValue(h);return'<div style="margin-bottom:10px"><div class="flex-between" style="margin-bottom:4px"><span style="font-size:0.82rem;font-weight:600">'+h.ticker+'</span><span style="font-size:0.82rem">'+fmtAUD(val)+'</span></div><div class="progress-track"><div class="progress-fill" style="width:'+(val/mv*100).toFixed(0)+'%;background:'+(TC[h.asset_type]||'var(--blue)')+'"></div></div></div>';}).join('');}}renderHoldingsTable(holdings,'holdings-tbody');}
+function renderPortfolio(){const el=document.getElementById('portfolio-content');if(!el)return;const byt={};holdings.forEach(h=>{if(!byt[h.asset_type])byt[h.asset_type]=[];byt[h.asset_type].push(h);});const secs=Object.entries(byt).map(([t,hs])=>{const tot=hs.reduce((s,h)=>s+getValue(h),0),cost=hs.reduce((s,h)=>s+h.cost_aud,0),pl=tot-cost;return'<div class="card section-gap"><div class="flex-between" style="margin-bottom:12px"><div class="card-title" style="margin:0">'+typeBadge(t)+' '+TL[t]+'</div><div style="font-size:0.85rem">'+fmtAUD(tot)+' &middot; <span class="'+plClass(pl)+'">'+fmtPct(cost>0?pl/cost*100:0)+'</span></div></div><div class="tbl-wrap"><table><thead><tr><th>Asset</th><th>Account</th><th class="td-num">Units</th><th class="td-num">Value</th><th class="td-num">Cost</th><th class="td-num">P/L</th><th></th></tr></thead><tbody>'+hs.map(h=>{const val=getValue(h),p=getPL(h),pp=getPLPct(h);return'<tr><td class="td-ticker">'+h.ticker+'<div style="font-size:0.75rem;color:var(--text2)">'+h.name+'</div></td><td>'+accountBadge(h.account)+'</td><td class="td-num">'+fmtNum(h.units,4)+'</td><td class="td-num">'+fmtAUD(val)+'</td><td class="td-num" style="color:var(--text2)">'+fmtAUD(h.cost_aud)+'</td><td class="td-num '+plClass(p)+'">'+fmtAUD(p)+' ('+fmtPct(pp)+')</td><td><button class="btn btn-ghost btn-sm" onclick="editHolding(\''+h.id+'\')">Edit</button></td></tr>';}).join('')+'</tbody></table></div></div>';});el.innerHTML=secs.join('')||'<div class="empty-state"><div class="empty-icon">&#x1F4CA;</div><p>No holdings yet</p></div>';}
+function renderAccountView(account,contentId){const el=document.getElementById(contentId);if(!el)return;const data=holdings.filter(h=>h.account===account);const tot=data.reduce((s,h)=>s+getValue(h),0),cost=data.reduce((s,h)=>s+h.cost_aud,0),pl=tot-cost;el.innerHTML='<div class="stat-grid" style="margin-bottom:16px"><div class="card card-sm"><div class="card-title">Value</div><div class="metric-val">'+fmtAUD(tot)+'</div></div><div class="card card-sm"><div class="card-title">Cost Base</div><div class="metric-val">'+fmtAUD(cost)+'</div></div><div class="card card-sm"><div class="card-title">P/L</div><div class="metric-val '+plClass(pl)+'">'+fmtAUD(pl)+'</div></div><div class="card card-sm"><div class="card-title">Return</div><div class="metric-val '+plClass(pl)+'">'+fmtPct(cost>0?pl/cost*100:0)+'</div></div></div><div class="card"><div class="tbl-wrap"><table><thead><tr><th>Asset</th><th>Type</th><th class="td-num">Units</th><th class="td-num">Price</th><th class="td-num">Value</th><th class="td-num">Cost</th><th class="td-num">P/L</th><th class="td-num">%</th><th></th></tr></thead><tbody id="'+contentId+'-tbody"></tbody></table></div></div>';renderHoldingsTable(data,contentId+'-tbody');}
+function renderSMSF(){renderAccountView('smsf','smsf-content');const s=smsfSettings,conc=parseFloat(s.concessional_used)||0,nonc=parseFloat(s.non_concessional_used)||0,cp=Math.min(conc/30000*100,100),np=Math.min(nonc/120000*100,100);const dob=s.dob?new Date(s.dob):null,age=dob?Math.floor((new Date()-dob)/365.25/86400000):null;const dr=age?([[55,65,4],[65,75,5],[75,80,6],[80,85,7],[85,90,9],[90,95,11],[95,200,14]].find(([mn,mx])=>age>=mn&&age<mx)?.[2]??0):null;const sv=holdings.filter(h=>h.account==='smsf').reduce((s,h)=>s+getValue(h),0);const el=document.getElementById('smsf-content');if(el)el.innerHTML+='<div class="card section-gap"><div class="card-title">FY2025-26 Compliance</div><div style="font-size:0.72rem;color:var(--amber3);background:rgba(158,106,3,.15);border:1px solid rgba(158,106,3,.3);border-radius:6px;padding:8px 12px;margin-bottom:16px">&#x26A0;&#xFE0F; Tracking only — confirm with Carl before 30 June.</div><div class="smsf-grid"><div><div style="margin-bottom:12px"><div class="flex-between" style="margin-bottom:6px"><span style="font-size:0.82rem;font-weight:600">Concessional Contributions</span><span>'+fmtAUD(conc)+' / $30,000</span></div><div class="progress-track"><div class="progress-fill'+(cp>=100?' over':cp>=80?' warn':'')+ '" style="width:'+cp.toFixed(1)+'%"></div></div></div><div style="margin-bottom:12px"><div class="flex-between" style="margin-bottom:6px"><span style="font-size:0.82rem;font-weight:600">Non-Concessional</span><span>'+fmtAUD(nonc)+' / $120,000</span></div><div class="progress-track"><div class="progress-fill'+(np>=100?' over':np>=80?' warn':'')+ '" style="width:'+np.toFixed(1)+'%"></div></div></div></div><div>'+(age!=null?'<div class="info-row"><span class="info-label">Age</span><span class="info-val">'+age+' years</span></div>':'')+( dr!=null?'<div class="info-row"><span class="info-label">Min drawdown rate</span><span class="info-val">'+dr+'%/yr</span></div><div class="info-row"><span class="info-label">Min drawdown amount</span><span class="info-val">'+fmtAUD(sv*dr/100)+'</span></div>':'')+'<div class="info-row"><span class="info-label">SMSF Balance</span><span class="info-val">'+fmtAUD(sv)+'</span></div></div></div></div>';}
+function renderNetWorth(){const el=document.getElementById('nw-breakdown'),se=document.getElementById('nw-stats');if(!el)return;const v=value();se.innerHTML='<div class="card card-sm"><div class="card-title">Investments</div><div class="metric-val">'+fmtAUD(v.net)+'</div><div class="metric-sub">across all accounts</div></div><div class="card card-sm"><div class="card-title">Total P/L</div><div class="metric-val '+plClass(v.pnl)+'">'+fmtAUD(v.pnl)+'</div><div class="metric-sub">'+fmtPct(v.pnlPct)+' return</div></div>';el.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+allocation().map(a=>'<div class="flex-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><div class="flex-gap"><span style="width:12px;height:12px;border-radius:3px;background:'+TC[a.type]+';display:inline-block"></span><span>'+TL[a.type]+'</span></div><div class="flex-gap"><span style="color:var(--text2);font-size:0.82rem">'+a.pct.toFixed(1)+'%</span><span style="font-weight:600">'+fmtAUD(a.val)+'</span></div></div>').join('')+'</div>';}
+function renderWatchlist(){const el=document.getElementById('watchlist-content');if(!el)return;if(!watchlist.length){el.innerHTML='<div class="card"><div class="empty-state"><div class="empty-icon">&#x1F441;&#xFE0F;</div><p>No tickers on watchlist.</p></div></div>';return;}el.innerHTML='<div class="card"><div class="tbl-wrap"><table><thead><tr><th>Ticker</th><th>Type</th><th class="td-num">Price (AUD)</th><th class="td-num">24h</th><th></th></tr></thead><tbody>'+watchlist.map(w=>{const q=liveQuotes[w.ticker],c=w.cg_id?liveCrypto[w.cg_id]:null,pr=q?.price??c?.price_aud??null,ch=q?.change_pct??c?.change_24h??null;return'<tr><td class="td-ticker">'+w.ticker+'<div style="font-size:0.75rem;color:var(--text2)">'+w.name+'</div></td><td>'+typeBadge(w.asset_type)+'</td><td class="td-num">'+(pr!=null?fmtAUDfull(pr):'—')+'</td><td class="td-num '+(ch!=null?plClass(ch):'')+'">'+( ch!=null?fmtPct(ch):'—')+'</td><td><button class="btn btn-danger btn-sm" onclick="deleteWatch(\''+w.id+'\')">Remove</button></td></tr>';}).join('')+'</tbody></table></div></div>';}
+function renderSettings(){const el=document.getElementById('settings-content');if(!el)return;const s=smsfSettings;el.innerHTML='<div class="card" style="max-width:600px"><div class="card-title">SMSF Details</div><div class="form-row"><div><label>Fund Name</label><input id="set-fund" value="'+(s.fund_name||'')+'"></div><div><label>Member Name</label><input id="set-member" value="'+(s.member_name||'')+'"></div></div><div class="form-row"><div><label>Date of Birth</label><input id="set-dob" type="date" value="'+(s.dob||'')+'"></div><div><label>SMSF Balance (AUD)</label><input id="set-balance" type="number" value="'+(s.balance||0)+'"></div></div><div class="form-row"><div><label>Concessional Used ($)</label><input id="set-conc" type="number" value="'+(s.concessional_used||0)+'"></div><div><label>Non-Concessional Used ($)</label><input id="set-nonc" type="number" value="'+(s.non_concessional_used||0)+'"></div></div><div style="margin-top:16px"><button class="btn btn-primary" onclick="saveSettings()">Save Settings</button></div></div>';}
+function renderCurrentView(){if(currentView==='dashboard')renderDashboard();else if(currentView==='portfolio')renderPortfolio();else if(currentView==='personal')renderAccountView('personal','personal-content');else if(currentView==='smsf')renderSMSF();else if(currentView==='networth')renderNetWorth();else if(currentView==='watchlist')renderWatchlist();else if(currentView==='settings')renderSettings();}
+function onTypeChange(){const t=document.getElementById('h-type').value;document.getElementById('h-fx-row').style.display=t==='intl_share'?'':'none';document.getElementById('h-cg-row').style.display=t==='crypto'?'':'none';}
+function onTickerChange(){if(liveFx.USDAUD&&document.getElementById('h-type').value==='intl_share')document.getElementById('h-fx').value=liveFx.USDAUD.toFixed(4);}
+function calcAudCost(){const u=parseFloat(document.getElementById('h-units')?.value)||0,uc=parseFloat(document.getElementById('h-usd-cost')?.value)||0,fx=parseFloat(document.getElementById('h-fx')?.value)||1;if(u>0&&uc>0)document.getElementById('h-cost').value=(u*uc*fx).toFixed(2);}
+function openAddHolding(account=''){editingHoldingId=null;document.getElementById('modal-holding-title').textContent='Add Holding';['h-ticker','h-name','h-units','h-cost','h-usd-cost','h-cg-id','h-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('h-type').value='au_share';document.getElementById('h-account').value=account||'personal';document.getElementById('h-fx').value=liveFx.USDAUD?liveFx.USDAUD.toFixed(4):'1.54';onTypeChange();openModal('modal-holding');}
+function editHolding(id){const h=holdings.find(h=>h.id===id);if(!h)return;editingHoldingId=id;document.getElementById('modal-holding-title').textContent='Edit Holding';document.getElementById('h-ticker').value=h.ticker;document.getElementById('h-name').value=h.name;document.getElementById('h-type').value=h.asset_type;document.getElementById('h-account').value=h.account;document.getElementById('h-units').value=h.units;document.getElementById('h-cost').value=h.cost_aud;document.getElementById('h-cg-id').value=h.cg_id||'';document.getElementById('h-notes').value=h.notes||'';document.getElementById('h-fx').value=h.last_fx||(liveFx.USDAUD?liveFx.USDAUD.toFixed(4):'1.54');onTypeChange();openModal('modal-holding');}
+async function saveHolding(){const ticker=document.getElementById('h-ticker').value.trim().toUpperCase(),name=document.getElementById('h-name').value.trim(),asset_type=document.getElementById('h-type').value,account=document.getElementById('h-account').value,units=parseFloat(document.getElementById('h-units').value)||0,cost_aud=parseFloat(document.getElementById('h-cost').value)||0,cg_id=document.getElementById('h-cg-id').value.trim().toLowerCase()||null,notes=document.getElementById('h-notes').value.trim()||null,last_fx=parseFloat(document.getElementById('h-fx').value)||null;if(!ticker||!name){toast('Ticker and name are required',false);return;}const payload={ticker,name,asset_type,account,units,cost_aud,notes};if(cg_id)payload.cg_id=cg_id;if(asset_type==='intl_share'&&last_fx)payload.last_fx=last_fx;try{if(editingHoldingId){const u=await apiPatch('holdings',editingHoldingId,payload);const idx=holdings.findIndex(h=>h.id===editingHoldingId);if(idx>=0)holdings[idx]=Array.isArray(u)?u[0]:u;toast('Holding updated');}else{const c=await apiPost('holdings',payload);holdings.push(Array.isArray(c)?c[0]:c);toast('Holding added');}closeModal('modal-holding');renderCurrentView();renderDashboard();}catch(e){if(_simMode){const fh={...payload,id:'sim-'+Date.now(),created_at:new Date().toISOString()};if(editingHoldingId){const idx=holdings.findIndex(h=>h.id===editingHoldingId);if(idx>=0)holdings[idx]=fh;}else holdings.push(fh);toast('Saved (offline)');closeModal('modal-holding');renderCurrentView();renderDashboard();}else toast('Error: '+e.message,false);}}
+async function deleteHolding(id){if(!confirm('Delete this holding?'))return;try{await apiDelete('holdings',id);holdings=holdings.filter(h=>h.id!==id);toast('Holding deleted');renderCurrentView();renderDashboard();}catch(e){if(_simMode){holdings=holdings.filter(h=>h.id!==id);renderCurrentView();renderDashboard();}else toast('Error: '+e.message,false);}}
+function openAddWatch(){openModal('modal-watch');}
+async function saveWatchItem(){const ticker=document.getElementById('w-ticker').value.trim().toUpperCase(),name=document.getElementById('w-name').value.trim(),asset_type=document.getElementById('w-type').value,cg_id=document.getElementById('w-cg-id').value.trim().toLowerCase()||null;if(!ticker||!name){toast('Ticker and name required',false);return;}try{const c=await apiPost('watchlist',{ticker,name,asset_type,cg_id});watchlist.push(Array.isArray(c)?c[0]:c);toast('Added to watchlist');closeModal('modal-watch');renderWatchlist();}catch(e){if(_simMode){watchlist.push({ticker,name,asset_type,cg_id,id:'sim-'+Date.now()});toast('Added (offline)');closeModal('modal-watch');renderWatchlist();}else toast('Error: '+e.message,false);}}
+async function deleteWatch(id){try{await apiDelete('watchlist',id);}catch(e){}watchlist=watchlist.filter(w=>w.id!==id);renderWatchlist();}
+async function saveSettings(){const s={fund_name:document.getElementById('set-fund').value,member_name:document.getElementById('set-member').value,dob:document.getElementById('set-dob').value,balance:parseFloat(document.getElementById('set-balance').value)||0,concessional_used:parseFloat(document.getElementById('set-conc').value)||0,non_concessional_used:parseFloat(document.getElementById('set-nonc').value)||0};try{await fetch(API+'/app_settings/smsf',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:s})});smsfSettings=s;toast('Settings saved');}catch(e){smsfSettings=s;toast('Saved (offline)',true);}}
+async function init(){try{const[h,w,sets]=await Promise.all([apiGet('holdings'),apiGet('watchlist'),apiGet('app_settings')]);if(h)holdings=h;if(w)watchlist=w;if(sets&&Array.isArray(sets)){const sr=sets.find(s=>s.key==='smsf'),pr=sets.find(s=>s.key==='preferences');if(sr)smsfSettings=sr.value;if(pr)prefs=pr.value;}}catch(e){_simMode=true;}await refreshPrices();const iv=(prefs.refresh_interval||300)*1000;setInterval(refreshPrices,iv);renderDashboard();}
+document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.add('hidden');});});
+init();
+</script>
+</body>
+</html>
